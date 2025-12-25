@@ -1,13 +1,22 @@
 class HackerAI_Logic:
-    async def generate_response(self, query):
-        query = query.lower()
-        
-        if "payload" in query or "exploit" in query:
-            return ("⚠️ **Pentest Guidance:** When generating payloads for authorized testing, "
-                    "ensure you are using updated meterpreter templates for the target architecture. "
-                    "Which OS are you targeting (Android/Windows/Linux)?")
-            
-        if "python" in query or "code" in query:
-            return "🖥️ **Code Assistant:** I can help you write Python scrapers, automation scripts, or socket listeners. Describe your logic."
+    async def generate_response(self, query: str):
+        return f"""
+🧠 **Advanced AI Assistant**
 
-        return "I am ready for the task. Provide the technical parameters for the security assessment."
+I will:
+• Generate full projects
+• Explain from beginner → expert
+• Include tools, setup, deployment
+• Write complete working code
+• Cover ethical hacking, devops, automation
+
+Your request:
+➡️ {query}
+
+Please specify:
+1) Language
+2) Goal
+3) Level (Beginner / Advanced)
+
+I will respond with FULL implementation.
+"""
