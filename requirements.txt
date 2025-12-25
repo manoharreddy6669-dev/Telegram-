@@ -1,3 +1,7 @@
 telethon
 motor
-dnspython
+pymongo
+python-dotenv
+fastapi
+uvicorn
+jinja2
