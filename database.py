@@ -1,56 +1,36 @@
-# database.py
-
-import os
 import motor.motor_asyncio
-
+from datetime import datetime
 
 class DBHandler:
-    def __init__(self, uri: str | None = None):
-        # Read from environment if not passed
-        self.uri = uri or os.getenv("MONGO_URI")
-        if not self.uri:
-            raise ValueError("MONGO_URI is not set")
+    def __init__(self, uri):
+        self.client = motor.motor_asyncio.AsyncIOMotorClient(uri)
+        self.db = self.client.TelegramAI
+        self.users = self.db.users
 
-        self.client = motor.motor_asyncio.AsyncIOMotorClient(self.uri)
-
-        # Database & collections
-        self.db = self.client["HackerAI_DB"]
-        self.users = self.db["users"]
-
-    async def init_indexes(self):
-        # Ensure unique user_id
-        await self.users.create_index("user_id", unique=True)
-
-    async def get_user_plan(self, user_id: int) -> str:
+    async def get_user(self, user_id):
         user = await self.users.find_one({"user_id": user_id})
         if not user:
-            await self.users.insert_one(
-                {
-                    "user_id": user_id,
-                    "plan": "FREE",
-                    "points": 0,
-                    "created_at": None,
-                }
-            )
-            return "FREE"
-        return user.get("plan", "FREE")
+            user = {
+                "user_id": user_id,
+                "plan": "FREE",
+                "points": 0,
+                "expires_at": None,
+                "created_at": datetime.utcnow()
+            }
+            await self.users.insert_one(user)
+        return user
 
-    async def update_plan(self, user_id: int, new_plan: str):
+    async def update_plan(self, user_id, plan, expiry):
         await self.users.update_one(
             {"user_id": user_id},
-            {"$set": {"plan": new_plan}},
-            upsert=True,
+            {"$set": {"plan": plan, "expires_at": expiry}}
         )
 
-    async def add_points(self, user_id: int, points: int):
+    async def add_points(self, user_id, points):
         await self.users.update_one(
             {"user_id": user_id},
-            {"$inc": {"points": points}},
-            upsert=True,
+            {"$inc": {"points": points}}
         )
 
-    async def get_points(self, user_id: int) -> int:
-        user = await self.users.find_one({"user_id": user_id})
-        if not user:
-            return 0
-        return user.get("points", 0)
+    async def all_users(self):
+        return await self.users.find().to_list(length=1000)
